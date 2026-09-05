@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { ModelViewerElement } from "@google/model-viewer";
+import { useEffect, useState } from "react";
 
 const MODEL_URL = "/models/Meshy_AI_White_Runner_with_Cop_0905123346_generate.glb";
 
 export function SneakerStage() {
-  const viewer = useRef<ModelViewerElement | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -32,7 +30,6 @@ export function SneakerStage() {
   return (
     <div className="sneaker-stage">
       <ModelViewer
-        ref={viewer}
         src={MODEL_URL}
         alt="Interactive 3D view of the Sneakerclub FORM 001 sneaker"
         loading="eager"
