@@ -49,7 +49,6 @@ function Shoe() {
       rotation={[mobile ? -0.04 : -0.02, -0.35, 0]}
       polar={[-Math.PI / 2, Math.PI / 2]}
       azimuth={[-Infinity, Infinity]}
-      config={{ mass: 1, tension: 150, friction: 24 }}
     >
       <primitive
         object={prepared}
@@ -66,17 +65,11 @@ function Loader() {
 
 export function SneakerStage() {
   const [canRender, setCanRender] = useState<boolean | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
     const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
     setCanRender(Boolean(gl));
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReducedMotion(media.matches);
-    sync();
-    media.addEventListener?.("change", sync);
-    return () => media.removeEventListener?.("change", sync);
   }, []);
 
   if (canRender === null) return <div className="stage-fallback" aria-hidden="true" />;
