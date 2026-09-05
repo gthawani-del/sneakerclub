@@ -1,14 +1,24 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, Html, useGLTF } from "@react-three/drei";
 
 const MODEL_URL = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb";
 
 function Shoe() {
   const { scene } = useGLTF(MODEL_URL);
-  return <primitive object={scene} rotation={[0, -0.55, 0]} scale={8.4} position={[0, -0.25, 0]} />;
+  const { size } = useThree();
+  const mobile = size.width <= 768;
+
+  return (
+    <primitive
+      object={scene}
+      rotation={[0, -0.55, mobile ? -0.04 : 0]}
+      scale={mobile ? 5.55 : 7.25}
+      position={mobile ? [0.42, 1.15, 0] : [1.05, -0.08, 0]}
+    />
+  );
 }
 
 function Loader() {
@@ -39,13 +49,13 @@ export function SneakerStage() {
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       >
-        <ambientLight intensity={0.75} />
-        <directionalLight position={[4, 5, 5]} intensity={2.5} />
-        <directionalLight position={[-4, 2, -2]} intensity={1.25} />
+        <ambientLight intensity={0.68} />
+        <directionalLight position={[4, 5, 5]} intensity={2.35} />
+        <directionalLight position={[-4, 2, -2]} intensity={1.15} />
         <Suspense fallback={<Loader />}>
           <Shoe />
           <Environment preset="studio" />
-          <ContactShadows position={[0, -1.05, 0]} opacity={0.28} scale={7} blur={2.4} far={4} />
+          <ContactShadows position={[0, -1.05, 0]} opacity={0.22} scale={7} blur={2.6} far={4} />
         </Suspense>
       </Canvas>
     </div>
