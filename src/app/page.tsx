@@ -14,6 +14,11 @@ export default function Home() {
           <a className="bag-link" href="#bag" aria-label="Shopping bag, empty">Bag <span>0</span></a>
         </header>
 
+        <div className="product-zone">
+          <SneakerStageLoader />
+          <p className="drag-cue" aria-hidden="true"><span>↔</span> Drag to inspect</p>
+        </div>
+
         <div className="hero-copy">
           <p className="eyebrow">Sneakerclub / 001</p>
           <h1 id="hero-title"><span>FORM</span> <strong>001</strong></h1>
@@ -22,11 +27,6 @@ export default function Home() {
           <a className="hero-cta" href="#form-details">Explore FORM 001 <span aria-hidden="true">↘</span></a>
         </div>
 
-        <SneakerStageLoader />
-        <div className="hero-meta" aria-hidden="true">
-          <span>01 / 04</span>
-          <span>Drag to inspect</span>
-        </div>
         <p className="scroll-cue" aria-hidden="true">Scroll to explore</p>
       </section>
 
