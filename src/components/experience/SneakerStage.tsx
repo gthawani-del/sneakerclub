@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Html, PresentationControls, useGLTF } from "@react-three/drei";
+import { ContactShadows, Environment, Html, TrackballControls, useGLTF } from "@react-three/drei";
 import { Box3, BufferGeometry, Mesh, MeshPhysicalMaterial, Vector3 } from "three";
+import type { TrackballControls as TrackballControlsImpl } from "three-stdlib";
 
 const MODEL_URL = "/models/Meshy_AI_White_Runner_with_Cop_0905123346_generate.glb";
 
@@ -40,22 +41,37 @@ function Shoe() {
   }, [scene]);
 
   return (
-    <PresentationControls
-      global
-      cursor
-      snap={false}
-      speed={mobile ? 1.15 : 1}
-      zoom={1}
+    <primitive
+      object={prepared}
+      scale={mobile ? 1.02 : 1.18}
+      position={mobile ? [0, -0.05, 0] : [0.08, -0.04, 0]}
       rotation={[mobile ? -0.04 : -0.02, -0.35, 0]}
-      polar={[-Math.PI / 2, Math.PI / 2]}
-      azimuth={[-Infinity, Infinity]}
-    >
-      <primitive
-        object={prepared}
-        scale={mobile ? 1.02 : 1.18}
-        position={mobile ? [0, -0.05, 0] : [0.08, -0.04, 0]}
-      />
-    </PresentationControls>
+    />
+  );
+}
+
+function ProductControls() {
+  const controls = useRef<TrackballControlsImpl>(null);
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const element = gl.domElement;
+    element.style.touchAction = "pan-y";
+    return () => {
+      element.style.touchAction = "";
+    };
+  }, [gl]);
+
+  return (
+    <TrackballControls
+      ref={controls}
+      makeDefault
+      noPan
+      noZoom
+      rotateSpeed={2.2}
+      dynamicDampingFactor={0.16}
+      staticMoving={false}
+    />
   );
 }
 
@@ -76,7 +92,7 @@ export function SneakerStage() {
   if (!canRender) return <div className="stage-fallback" role="img" aria-label="Sneaker product experience unavailable on this device"><span>3D preview unavailable</span></div>;
 
   return (
-    <div className="sneaker-stage" aria-label="Interactive 3D view of FORM 001 sneaker. Drag to inspect from any angle.">
+    <div className="sneaker-stage" aria-label="Interactive 3D view of FORM 001 sneaker. Drag freely to inspect every angle.">
       <Canvas
         camera={{ position: [0, 0.12, 5], fov: 30 }}
         dpr={[1, 1.5]}
@@ -92,6 +108,7 @@ export function SneakerStage() {
           <Shoe />
           <Environment preset="studio" environmentIntensity={0.7} />
           <ContactShadows position={[0, -0.78, 0]} opacity={0.24} scale={5} blur={2.5} far={4} />
+          <ProductControls />
         </Suspense>
       </Canvas>
     </div>
