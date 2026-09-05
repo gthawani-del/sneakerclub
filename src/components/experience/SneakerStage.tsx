@@ -1,17 +1,19 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Html, TrackballControls, useGLTF } from "@react-three/drei";
-import { Box3, BufferGeometry, Mesh, MeshPhysicalMaterial, Vector3 } from "three";
-import type { TrackballControls as TrackballControlsImpl } from "three-stdlib";
+import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import { ContactShadows, Environment, Html, useGLTF } from "@react-three/drei";
+import { Box3, BufferGeometry, Group, MathUtils, Mesh, MeshPhysicalMaterial, Vector3 } from "three";
 
 const MODEL_URL = "/models/Meshy_AI_White_Runner_with_Cop_0905123346_generate.glb";
+const PITCH_LIMIT = Math.PI * 0.48;
 
 function Shoe() {
   const { scene } = useGLTF(MODEL_URL);
   const { size } = useThree();
   const mobile = size.width <= 768;
+  const group = useRef<Group>(null);
+  const gesture = useRef({ active: false, pointerId: -1, x: 0, y: 0, yaw: -0.35, pitch: -0.04 });
 
   const prepared = useMemo(() => {
     const clone = scene.clone(true);
@@ -40,38 +42,54 @@ function Shoe() {
     return clone;
   }, [scene]);
 
+  useFrame((_, delta) => {
+    if (!group.current) return;
+    const k = 1 - Math.exp(-14 * delta);
+    group.current.rotation.y = MathUtils.lerp(group.current.rotation.y, gesture.current.yaw, k);
+    group.current.rotation.x = MathUtils.lerp(group.current.rotation.x, gesture.current.pitch, k);
+  });
+
+  const onPointerDown = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    gesture.current.active = true;
+    gesture.current.pointerId = event.pointerId;
+    gesture.current.x = event.clientX;
+    gesture.current.y = event.clientY;
+    event.nativeEvent.preventDefault();
+    (event.nativeEvent.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+  };
+
+  const onPointerMove = (event: ThreeEvent<PointerEvent>) => {
+    if (!gesture.current.active || gesture.current.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    event.nativeEvent.preventDefault();
+    const dx = event.clientX - gesture.current.x;
+    const dy = event.clientY - gesture.current.y;
+    gesture.current.x = event.clientX;
+    gesture.current.y = event.clientY;
+    gesture.current.yaw += dx * 0.012;
+    gesture.current.pitch = MathUtils.clamp(gesture.current.pitch + dy * 0.012, -PITCH_LIMIT, PITCH_LIMIT);
+  };
+
+  const onPointerEnd = (event: ThreeEvent<PointerEvent>) => {
+    if (gesture.current.pointerId !== event.pointerId) return;
+    gesture.current.active = false;
+    gesture.current.pointerId = -1;
+  };
+
   return (
-    <primitive
-      object={prepared}
-      scale={mobile ? 1.02 : 1.18}
-      position={mobile ? [0, -0.05, 0] : [0.08, -0.04, 0]}
-      rotation={[mobile ? -0.04 : -0.02, -0.35, 0]}
-    />
-  );
-}
-
-function ProductControls() {
-  const controls = useRef<TrackballControlsImpl>(null);
-  const { gl } = useThree();
-
-  useEffect(() => {
-    const element = gl.domElement;
-    element.style.touchAction = "pan-y";
-    return () => {
-      element.style.touchAction = "";
-    };
-  }, [gl]);
-
-  return (
-    <TrackballControls
-      ref={controls}
-      makeDefault
-      noPan
-      noZoom
-      rotateSpeed={2.2}
-      dynamicDampingFactor={0.16}
-      staticMoving={false}
-    />
+    <group ref={group} rotation={[mobile ? -0.04 : -0.02, -0.35, 0]}>
+      <primitive
+        object={prepared}
+        scale={mobile ? 1.02 : 1.18}
+        position={mobile ? [0, -0.05, 0] : [0.08, -0.04, 0]}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        onPointerLeave={onPointerEnd}
+      />
+    </group>
   );
 }
 
@@ -92,11 +110,12 @@ export function SneakerStage() {
   if (!canRender) return <div className="stage-fallback" role="img" aria-label="Sneaker product experience unavailable on this device"><span>3D preview unavailable</span></div>;
 
   return (
-    <div className="sneaker-stage" aria-label="Interactive 3D view of FORM 001 sneaker. Drag freely to inspect every angle.">
+    <div className="sneaker-stage" aria-label="Interactive 3D view of FORM 001 sneaker. Drag left or right to rotate, and drag up or down to inspect the top and sole.">
       <Canvas
         camera={{ position: [0, 0.12, 5], fov: 30 }}
         dpr={[1, 1.5]}
-        frameloop="demand"
+        frameloop="always"
+        style={{ touchAction: "none" }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       >
         <ambientLight intensity={0.42} />
@@ -108,7 +127,6 @@ export function SneakerStage() {
           <Shoe />
           <Environment preset="studio" environmentIntensity={0.7} />
           <ContactShadows position={[0, -0.78, 0]} opacity={0.24} scale={5} blur={2.5} far={4} />
-          <ProductControls />
         </Suspense>
       </Canvas>
     </div>
