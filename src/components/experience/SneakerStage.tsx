@@ -5,34 +5,6 @@ import type { ModelViewerElement } from "@google/model-viewer";
 
 const MODEL_URL = "/models/Meshy_AI_White_Runner_with_Cop_0905123346_generate.glb";
 
-type ViewerProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
-  src: string;
-  alt: string;
-  loading?: "auto" | "lazy" | "eager";
-  reveal?: "auto" | "interaction" | "manual";
-  "camera-controls"?: boolean;
-  "touch-action"?: string;
-  "camera-orbit"?: string;
-  "min-camera-orbit"?: string;
-  "max-camera-orbit"?: string;
-  "field-of-view"?: string;
-  "min-field-of-view"?: string;
-  "max-field-of-view"?: string;
-  "interaction-prompt"?: string;
-  "shadow-intensity"?: string;
-  "shadow-softness"?: string;
-  "environment-image"?: string;
-  exposure?: string;
-};
-
-declare module "react" {
-  namespace JSX {
-    interface IntrinsicElements {
-      "model-viewer": ViewerProps;
-    }
-  }
-}
-
 export function SneakerStage() {
   const viewer = useRef<ModelViewerElement | null>(null);
   const [ready, setReady] = useState(false);
@@ -55,10 +27,12 @@ export function SneakerStage() {
     );
   }
 
+  const ModelViewer = "model-viewer" as React.ElementType;
+
   return (
     <div className="sneaker-stage">
-      <model-viewer
-        ref={viewer as React.Ref<HTMLElement>}
+      <ModelViewer
+        ref={viewer}
         src={MODEL_URL}
         alt="Interactive 3D view of the Sneakerclub FORM 001 sneaker"
         loading="eager"
